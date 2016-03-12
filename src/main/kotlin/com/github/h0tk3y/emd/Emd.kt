@@ -5,6 +5,10 @@ import java.util.*
 private const val SOURCE_ID = 0
 private const val SINK_ID = 1
 
+private const val FOUND = 0
+private const val ENQUEUED = 1
+private const val NOT_REACHED = 2
+
 /**
  * Earth Mover's Distance implementation of [HistogramDistance].
  * The numeric type is chosen by subclasses.
@@ -39,49 +43,55 @@ where TNumeric : Number, TNumeric : Comparable<TNumeric> {
 
     private inner class FlowNetwork(val graph: Map<Int, Map<Int, Edge>>) {
 
-        val maxNode = graph.keys.max()!!
-        val infCost = graph.flatMap { it.value.values.map { it.cost } }.fold(zero) { acc, i -> acc plus i plus i }
+        val nodes = graph.entries.flatMap { listOf(it.key) + it.value.keys }.distinct()
+
+        val reversedGraph = graph.entries
+                .flatMap { f -> f.value.map { Triple(f.key, it.key, it.value) } }
+                .groupBy { it.second }
+                .mapValues { it.value.map { it.first to it.third }.toMap() }
 
         private fun cheapestResidualPath(from: Int, to: Int): List<Int>? {
-            //prev[k] = v such that edge (v -> k) is optimal
+            val d = HashMap<Int, TNumeric>().apply { this[SOURCE_ID] = zero }
             val prev = HashMap<Int, Int>()
+            val status = HashMap(nodes.associate { it to NOT_REACHED }).apply { this[SOURCE_ID] = ENQUEUED }
+            val queue = ArrayDeque<Int>(nodes.size).apply { addFirst(SOURCE_ID) }
 
-            //m[k] = cheapest path cost
-            val m = HashMap<Int, TNumeric>()
-            m[from] = zero
+            while (queue.isNotEmpty()) {
+                val v = queue.removeFirst()
+                status[v] = FOUND
 
-            for (i in 0..maxNode) {
-                for ((nFrom, es) in graph) {
-                    for ((nTo, e) in es) {
-                        if (e.flow < e.capacity) {
-                            //the edge is in residual network
-                            val candidateCost = (m[nFrom] ?: infCost) plus e.cost
-                            if (m[nTo] ?: infCost > candidateCost) {
-                                m[nTo] = candidateCost
-                                prev[nTo] = nFrom
-                            }
+                fun relax(t: Int, candidateCost: TNumeric) {
+                    when (status[t]) {
+                        FOUND -> if (d[t]!! > candidateCost) {
+                            d[t] = candidateCost
+                            prev[t] = v
+                            status[t] = ENQUEUED
+                            queue.addFirst(t)
                         }
-                        if (e.flow > zero) {
-                            //the reverse edge is in residual network
-                            val candidateCost = (m[nTo] ?: (infCost plus e.cost)) minus e.cost
-                            if (m[nFrom] ?: infCost > candidateCost) {
-                                m[nFrom] = candidateCost
-                                prev[nFrom] = nTo
-                            }
+                        ENQUEUED -> if (d[t]!! > candidateCost) {
+                            d[t] = candidateCost
+                            prev[t] = v
+                        }
+                        NOT_REACHED -> {
+                            d[t] = candidateCost
+                            prev[t] = v
+                            status[t] = ENQUEUED
+                            queue.addLast(t)
                         }
                     }
                 }
+
+                for ((t, e) in graph[v].orEmpty().filterValues { it.flow < it.capacity })
+                    relax(t, d[v]!! plus e.cost)
+
+                for ((t, e) in reversedGraph[v].orEmpty().filterValues { it.flow > zero })
+                    relax(t, d[v]!! minus e.cost)
             }
 
-
-            if (m[to] == null)
+            if (d[to] == null)
                 return null
 
-            val result = generateSequence(to) { if (it == from) null else prev[it] }.take(maxNode).toList().reversed()
-
-            if (result.first() != SOURCE_ID || result.last() != SINK_ID)
-                return null
-
+            val result = generateSequence(to) { if (it == from) null else prev[it] }.take(nodes.size).toList().reversed()
             return result
         }
 

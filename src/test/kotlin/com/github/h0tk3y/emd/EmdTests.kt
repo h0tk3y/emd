@@ -6,7 +6,7 @@ import org.junit.Test
 import java.math.BigDecimal
 
 class EmdTests {
-    val iterations = 100
+    val iterations = 1000
 
     @Test fun constantZeroDistance() {
         val d: HistogramDistance<Int, Int> = IntEmd { x, y -> 0 }
