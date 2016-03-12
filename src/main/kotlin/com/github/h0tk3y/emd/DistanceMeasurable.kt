@@ -10,5 +10,5 @@ interface DistanceMeasurable<TOther, TDistance> {
      * Get distance to [other].
      * @param other item to calculate distance to
      */
-    infix fun distanceTo(other: TOther): TDistance
+    fun distanceTo(other: TOther): TDistance
 }

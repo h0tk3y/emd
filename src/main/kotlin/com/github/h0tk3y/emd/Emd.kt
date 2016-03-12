@@ -128,7 +128,7 @@ where TNumeric : Number, TNumeric : Comparable<TNumeric> {
                 distancesCache[Pair(t1, t2)] ?:
                 distancesCache[Pair(t2, t1)] ?:
                 (distance?.invoke(t1, t2) ?:
-                 @Suppress("UNCHECKED_CAST") (t1 as DistanceMeasurable<in TItem, TNumeric>) distanceTo t2)
+                 @Suppress("UNCHECKED_CAST") (t1 as DistanceMeasurable<in TItem, TNumeric>).distanceTo(t2))
                         .apply {
                             distancesCache[Pair(t1, t2)] = this
                             distancesCache[Pair(t2, t1)] = this
