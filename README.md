@@ -11,7 +11,7 @@ max-flow solution with [SPFA](https://www.wikiwand.com/en/Shortest_Path_Faster_A
 
 Current implementation works for histograms with equal weight sums. If the weights are different, it behaves as if some mass can be dropped, and only the minimal of two weight sums is necessary to move.
 
-How to add a dependency
+Using with Gradle
 ---
 
     repositories {
@@ -43,7 +43,7 @@ First, implement the distance calculation for your type. In this example, let it
 * or implement `DistanceMeasurable` interface for your class:
  
    ```kotlin
-   class Point: DistanceMeasurable<Point> {
+   class Point: DistanceMeasurable<Point, BigDecimal> {
        /* class code */
        
        override fun distanceTo(other: Point) = 
