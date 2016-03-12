@@ -1,5 +1,7 @@
 EMD
 ===
+[![](https://jitpack.io/v/h0tk3y/emd.svg)](https://jitpack.io/#h0tk3y/emd)
+
 Implementation of 
 [Earth Mover's Distance](http://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/RUBNER/emd.htm)
 for histograms in Kotlin.
@@ -8,6 +10,18 @@ It uses successive shortest path min-cost
 max-flow solution with [SPFA](https://www.wikiwand.com/en/Shortest_Path_Faster_Algorithm) inside and thus is quite fast.
 
 Current implementation works for histograms with equal weight sums. If the weights are different, it behaves as if some mass can be dropped, and only the minimal of two weight sums is necessary to move.
+
+How to add a dependency
+---
+
+    repositories {
+        // ...
+        maven { url "https://jitpack.io" }
+    }
+ 
+    dependencies {
+        compile 'com.github.h0tk3y:emd:v0.9'
+    }
 
 How to use
 ---
